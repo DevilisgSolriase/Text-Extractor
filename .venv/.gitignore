@@ -1,0 +1,37 @@
+# created by virtualenv automatically
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Enviroments
+env/
+.venv/
+lib/
+share/
+bin/
+
+# Image Processing
+Images/
+
+# PyCharm
+.idea/
+*.iml
+
+# Linux System Files
+*.swp
+*~
+
+# Deep Learning Models / Checkpoints
+*.pth
+*.pt
+*.h5
+*.ckpt
+
+# Logs
+*.log
+
+# Output files
+output/
