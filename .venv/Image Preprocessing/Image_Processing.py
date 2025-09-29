@@ -44,13 +44,19 @@ def image_alignment(src_img):
 
 # Runs the Image into multiple processes to repair it for contouring
 def image_processing(aln_img):
+
     gray_img = cv.cvtColor(aln_img, cv.COLOR_BGR2GRAY)
 
-    blur_img = cv.GaussianBlur(gray_img, [3, 3], 0)
+    scaled_img = cv.resize(gray_img, None, fx=2, fy=2, interpolation=cv.INTER_CUBIC)
 
-    lap = cv.Laplacian(blur_img, cv.CV_8U, ksize=1)
+    blur_img = cv.GaussianBlur(scaled_img, [3,3], 0)
 
-    ret, img_thrs = cv.threshold(lap, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
+    lap = cv.Laplacian(blur_img, cv.CV_8U, ksize=3)
+
+    plt.imshow(lap, cmap='gray')
+    plt.show()
+
+    ret, img_thrs = cv.threshold(lap, 1, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
 
     return img_thrs
 
@@ -68,6 +74,7 @@ img = image_read(path)
 aln_img = image_alignment(img)
 proc_img = image_processing(aln_img)
 res = contour_draw(proc_img)
+
 
 kernal = np.ones((2, 2), np.uint8)
 cls_img = cv.morphologyEx(res, cv.MORPH_CLOSE, kernal)
