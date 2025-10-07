@@ -6,6 +6,8 @@ import PIL as pl
 import numpy as np
 from matplotlib import pyplot as plt
 
+# CONSTANTS
+N = 100
 
 # 0 = scanned doc, 1 = phone image, 2 = textured/colored doc (e.g ID card)
 image_type = 0
@@ -20,32 +22,56 @@ path = filedialog.askopenfilename(
 
 def doc_type(img):
     # per-pixel threshold
-    t =15
     global image_type
     total_px = img.size
 
+    height, width = img.shape[:2]
+
+    blur_size = min(height, width) / N
+
+    if blur_size < 10:
+        blur_kernel = (31, 31)
+    elif  10 <= blur_size < 20:
+        blur_kernel = (15, 15)
+    else:
+        blur_kernel = (9, 9)
+
     gray_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
-    blur_img = cv.blur(gray_img, (31, 31))
+    print("Blur Kernel: ",blur_kernel)
+
+    plt.imshow(gray_img, cmap='gray')
+    plt.show()
+
+    blur_img = cv.blur(gray_img, blur_kernel)
+
+    plt.imshow(blur_img, cmap='gray')
+    plt.show()
 
     diff = abs(gray_img - blur_img)
 
-    mean_abs_diff = np.mean(diff)
+    norm_diff = diff/255.0
 
-    pct_above_t = np.count_nonzero(diff > t) / total_px
+    t = np.median(norm_diff) * 1.5
 
-    p90 = np.percentile(diff, 90)
+    print("value of t: ",t)
 
-    print(mean_abs_diff, pct_above_t, p90)
+    mean_abs_diff = np.mean(norm_diff)
+
+    pct_above_t = np.count_nonzero(norm_diff > t) / total_px
+
+    p90 = np.percentile(norm_diff, 90)
+
+    print("MAD: ",mean_abs_diff, "Pct Above T: " ,pct_above_t, "P90: " ,p90)
 
     if mean_abs_diff < 3 and pct_above_t < 0.02 :
         image_type = 0
-    elif 3 <= mean_abs_diff <= 20 or 0.02 <= pct_above_t <= 0.10:
+    elif 3 <= mean_abs_diff <= 10 or pct_above_t <= 0.10 or p90 <= 40:
         image_type = 1
-    elif mean_abs_diff > 10 or pct_above_t > 0.10 or p90 >40:
+    else :
         image_type = 2
 
-    print(image_type)
+    print("Image Type: ",image_type)
 # this is for pipelining the images into the CNN, which will be done later on.
 #
 # Image_folder = "../Images"
@@ -64,8 +90,11 @@ def image_alignment(src_img):
     thrs_img = cv.threshold(gry_img, 0, 1, cv.THRESH_OTSU+cv.THRESH_BINARY_INV)[1]
     coord = np.column_stack(np.where(thrs_img > 0))
     angle = cv.minAreaRect(coord)[-1]
+    print("Angle: ",angle)
     if angle < -45:
         angle = -(90 + angle)
+    elif 90 >= angle > 45:
+        return src_img
     else:
         angle = -angle
     (h, w) = gry_img.shape
@@ -136,13 +165,15 @@ def contour_draw(img):
     return cont_img
 
 img = image_read(path)
-doc_type(img)
-aln_img = image_alignment(img)
-proc_img = image_processing(aln_img)
-
-plt.title('Result')
-plt.imshow(proc_img)
+plt.imshow(img)
 plt.show()
+aln_img = image_alignment(img)
+doc_type(aln_img)
+# proc_img = image_processing(aln_img)
+#
+# plt.title('Result')
+# plt.imshow(proc_img)
+# plt.show()
 
 cv.waitKey(0)
 cv.destroyAllWindows()
