@@ -40,11 +40,13 @@ def doc_type(img):
 
     print("Blur Kernel: ",blur_kernel)
 
+    plt.title("Gray Image")
     plt.imshow(gray_img, cmap='gray')
     plt.show()
 
     blur_img = cv.blur(gray_img, blur_kernel)
 
+    plt.title("Blured Image")
     plt.imshow(blur_img, cmap='gray')
     plt.show()
 
@@ -60,13 +62,13 @@ def doc_type(img):
 
     pct_above_t = np.count_nonzero(norm_diff > t) / total_px
 
-    p90 = np.percentile(norm_diff, 90)
+    p55 = np.percentile(norm_diff, 55)
 
-    print("MAD: ",mean_abs_diff, "Pct Above T: " ,pct_above_t, "P90: " ,p90)
+    print("MAD: ",mean_abs_diff, "Pct Above T: " ,pct_above_t, "P55: " ,p55)
 
-    if mean_abs_diff < 3 and pct_above_t < 0.02 :
+    if mean_abs_diff < 0.3 and pct_above_t < 0.14 :
         image_type = 0
-    elif 3 <= mean_abs_diff <= 10 or pct_above_t <= 0.10 or p90 <= 40:
+    elif 0.3 <= mean_abs_diff < 0.5 and pct_above_t <= 0.16 and p55 <= 0.12:
         image_type = 1
     else :
         image_type = 2
